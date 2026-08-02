@@ -16,12 +16,9 @@ function handleAdminLogin($pdo, &$error_message, &$success_message) {
     validateCsrfToken($_SESSION['csrf_token'], $_POST['csrf_token']);
 
     if (($_POST['admin_password'] ?? '') === ADMIN_PASSWORD) {
-        $_SESSION['is_admin'] = true;
-        unset($_SESSION['guest_user']);
-        $success_message = "Authenticated successfully as Administrator.";
-    } else {
-        $error_message = "Invalid administrative credentials.";
-    }
+    $_SESSION['is_admin'] = true;
+    unset($_SESSION['guest_user']);
+   }
 }
 
 function handleCustomerLogin($pdo, &$error_message, &$success_message) {
@@ -38,10 +35,13 @@ function handleCustomerLogin($pdo, &$error_message, &$success_message) {
         $_SESSION['guest_user'] = $user['username'];
         $_SESSION['is_admin'] = false;
         $success_message = "Customer logged in successfully.";
+    } elseif ($user) {
+        $error_message = "Your password is incorrect.";
     } else {
-        $error_message = "Invalid username or password.";
+        $error_message = "Username not found.";
     }
 }
+
 
 function handleGuestSignup($pdo, &$error_message, &$success_message) {
     validateCsrfToken($_SESSION['csrf_token'], $_POST['csrf_token']);

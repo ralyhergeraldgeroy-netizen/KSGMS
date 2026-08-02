@@ -12,13 +12,14 @@
         <h2 class="text-white text-center text-2xl font-bold mb-6">Customer Login</h2>
 
         <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">  
 
             <input type="text"
-                   name="username"
-                   placeholder="Username"
-                   required
-                   class="w-full mb-4 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white">
+       name="username"
+       placeholder="Username"
+       value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+       required
+       class="w-full mb-4 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white">
 
      <input
     type="password"
@@ -132,6 +133,34 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
         </button>
     </div>
 </div>
+
+<!-- Wrong Password Popup -->
+<div id="wrongPasswordPopup"
+     class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-red-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+
+        <div class="text-red-500 text-5xl mb-4">
+            ❌
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Login Failed
+        </h2>
+
+        <p class="text-red-400 mt-3 font-semibold">
+            Your password is incorrect.
+        </p>
+
+        <button onclick="closeWrongPasswordPopup()"
+                class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
+            OK
+        </button>
+
+    </div>
+</div>
+
+
 
     </div>
 </div>

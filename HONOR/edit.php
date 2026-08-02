@@ -11,7 +11,7 @@ if (!isset($_GET['id'])) {
 
 $id = intval($_GET['id']);
 
-$stmt = $pdo->prepare("SELECT * FROM bookings WHERE id=?");
+$stmt = $pdo->prepare("SELECT * FROM bookings WHERE id = ?");
 $stmt->execute([$id]);
 $booking = $stmt->fetch();
 
@@ -19,144 +19,235 @@ if (!$booking) {
     die("Booking not found.");
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $resort = $_POST['resort_name'];
-    $room = $_POST['room_number'];
-    $food = implode(", ", $_POST['food_items'] ?? []);
-    $price = $_POST['total_price'];
+    $resort = $_POST['resort_name'] ?? '';
+    $room = $_POST['room_number'] ?? '';
+    $selectedFoods = $_POST['food_items'] ?? [];
+
+    // Calculate room price
+    $roomPrice = $ROOM_PRICES[$resort] ?? 0;
+
+    // Calculate food price
+    $foodTotal = 0;
+
+    foreach ($selectedFoods as $food) {
+        if (isset($FOOD_PRICES[$food])) {
+            $foodTotal += $FOOD_PRICES[$food];
+        }
+    }
+
+    // Final total
+    $totalPrice = $roomPrice + $foodTotal;
+
+    $food = implode(", ", $selectedFoods);
 
     $update = $pdo->prepare("
         UPDATE bookings
         SET
-            resort_name=?,
-            room_number=?,
-            food_items=?,
-            total_price=?
-        WHERE id=?
+            resort_name = ?,
+            room_number = ?,
+            food_items = ?,
+            total_price = ?
+        WHERE id = ?
     ");
 
     $update->execute([
         $resort,
         $room,
         $food,
-        $price,
+        $totalPrice,
         $id
     ]);
 
     header("Location: index.php");
     exit;
 }
+
+$currentFoods = !empty($booking['food_items'])
+    ? explode(", ", $booking['food_items'])
+    : [];
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Edit Booking</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 
 </head>
-<body class="bg-gray-900 flex justify-center items-center min-h-screen">
 
-<div class="bg-white p-8 rounded-xl w-[500px]">
+<body class="bg-gray-900 flex justify-center items-center min-h-screen overflow-hidden">
 
-<h2 class="text-2xl font-bold mb-6">Edit Booking</h2>
+<div class="bg-white p-6 rounded-xl w-full max-w-[500px]">
+
+<h2 class="text-2xl font-bold mb-6 text-gray-900">
+    Edit Booking
+</h2>
 
 <form method="POST">
 
-<label class="font-bold">Resort</label>
+<!-- RESORT -->
 
-<label class="font-bold">Resort</label>
+<label class="font-bold text-gray-800">
+    Resort / Suite
+</label>
 
-<select name="resort_name" class="w-full border p-2 rounded mb-4">
+<select
+    name="resort_name"
+    id="resort_name"
+    class="w-full border p-2 rounded mb-4"
+    onchange="calculateTotal()"
+>
 
-    <option value="Ocean Oasis Suite" <?= $booking['resort_name']=="Ocean Oasis Suite" ? "selected" : "" ?>>
-        Ocean Oasis Suite
-    </option>
+<?php foreach ($ROOM_PRICES as $roomName => $roomPrice): ?>
 
-    <option value="Minimalist Skyline" <?= $booking['resort_name']=="Minimalist Skyline" ? "selected" : "" ?>>
-        Minimalist Skyline
-    </option>
+<option
+    value="<?= htmlspecialchars($roomName) ?>"
+    data-price="<?= $roomPrice ?>"
+    <?= $booking['resort_name'] === $roomName ? 'selected' : '' ?>
+>
+    <?= htmlspecialchars($roomName) ?> — $<?= number_format($roomPrice, 2) ?>
+</option>
 
-    <option value="Botanical Sanctuary" <?= $booking['resort_name']=="Botanical Sanctuary" ? "selected" : "" ?>>
-        Botanical Sanctuary
-    </option>
-
-    <option value="Emerald Canopy Treehouse" <?= $booking['resort_name']=="Emerald Canopy Treehouse" ? "selected" : "" ?>>
-        Emerald Canopy Treehouse
-    </option>
-
-    <option value="Sunset Crag Pavilion" <?= $booking['resort_name']=="Sunset Crag Pavilion" ? "selected" : "" ?>>
-        Sunset Crag Pavilion
-    </option>
+<?php endforeach; ?>
 
 </select>
 
-<label class="font-bold">Room Number</label>
+
+<!-- ROOM NUMBER -->
+
+<label class="font-bold text-gray-800">
+    Room Number
+</label>
 
 <input
-type="number"
-name="room_number"
-value="<?= $booking['room_number'] ?>"
-class="w-full border p-2 rounded mb-4">
+    type="number"
+    name="room_number"
+    value="<?= htmlspecialchars($booking['room_number']) ?>"
+    class="w-full border p-2 rounded mb-4"
+>
 
-<label class="font-bold">Food</label>
 
-<?php
-$currentFoods = explode(", ", $booking['food_items']);
-?>
+<!-- FOOD -->
 
-<div class="space-y-2 mb-4">
-
-<label class="block">
-    <input type="checkbox" name="food_items[]" value="Citrus Seared King Scallops"
-    <?= in_array("Citrus Seared King Scallops", $currentFoods) ? "checked" : "" ?>>
-    Citrus Seared King Scallops
+<label class="font-bold text-gray-800">
+    Food
 </label>
 
-<label class="block">
-    <input type="checkbox" name="food_items[]" value="Truffle Infused Kelp Ramen"
-    <?= in_array("Truffle Infused Kelp Ramen", $currentFoods) ? "checked" : "" ?>>
-    Truffle Infused Kelp Ramen
+<div class="space-y-3 mb-5">
+
+<?php foreach ($FOOD_PRICES as $foodName => $foodPrice): ?>
+
+<label class="flex items-center justify-between border p-3 rounded">
+
+    <div>
+
+        <input
+            type="checkbox"
+            name="food_items[]"
+            value="<?= htmlspecialchars($foodName) ?>"
+            data-price="<?= $foodPrice ?>"
+            onchange="calculateTotal()"
+
+            <?= in_array($foodName, $currentFoods) ? 'checked' : '' ?>
+        >
+
+        <span class="ml-2">
+            <?= htmlspecialchars($foodName) ?>
+        </span>
+
+    </div>
+
+    <span class="font-bold text-gray-700">
+        $<?= number_format($foodPrice, 2) ?>
+    </span>
+
 </label>
 
-<label class="block">
-    <input type="checkbox" name="food_items[]" value="Glazed Atlantic Cod"
-    <?= in_array("Glazed Atlantic Cod", $currentFoods) ? "checked" : "" ?>>
-    Glazed Atlantic Cod
-</label>
-
-<label class="block">
-    <input type="checkbox" name="food_items[]" value="Aged Wagyu Carpaccio"
-    <?= in_array("Aged Wagyu Carpaccio", $currentFoods) ? "checked" : "" ?>>
-    Aged Wagyu Carpaccio
-</label>
+<?php endforeach; ?>
 
 </div>
 
-<label class="font-bold">Total Price</label>
+
+<!-- PRICE BREAKDOWN -->
+
+<div class="bg-gray-100 rounded-lg p-4 mb-5">
+
+    <div class="flex justify-between mb-2">
+
+        <span class="font-semibold">
+            Room Price
+        </span>
+
+        <span id="roomPriceDisplay">
+            $0.00
+        </span>
+
+    </div>
+
+
+    <div class="flex justify-between mb-2">
+
+        <span class="font-semibold">
+            Food Total
+        </span>
+
+        <span id="foodPriceDisplay">
+            $0.00
+        </span>
+
+    </div>
+
+
+    <hr class="my-3">
+
+
+    <div class="flex justify-between text-xl font-bold">
+
+        <span>
+            Total Price
+        </span>
+
+        <span id="totalPriceDisplay">
+            $0.00
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- HIDDEN TOTAL -->
 
 <input
-type="number"
-step="0.01"
-name="total_price"
-value="<?= $booking['total_price'] ?>"
-class="w-full border p-2 rounded mb-6">
+    type="hidden"
+    name="total_price"
+    id="total_price"
+>
+
+
+<!-- BUTTONS -->
 
 <div class="flex gap-3">
 
 <button
-type="submit"
-class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-Save
+    type="submit"
+    class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+>
+    Save Changes
 </button>
 
 <a
-href="index.php"
-class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
-Cancel
+    href="index.php"
+    class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+>
+    Cancel
 </a>
 
 </div>
@@ -164,6 +255,64 @@ Cancel
 </form>
 
 </div>
+
+
+<script>
+
+function calculateTotal() {
+
+    // Get selected room
+    const roomSelect = document.getElementById('resort_name');
+
+    const selectedRoom =
+        roomSelect.options[roomSelect.selectedIndex];
+
+    const roomPrice =
+        parseFloat(selectedRoom.dataset.price) || 0;
+
+
+    // Calculate food
+    let foodTotal = 0;
+
+    const foods =
+        document.querySelectorAll(
+            'input[name="food_items[]"]:checked'
+        );
+
+    foods.forEach(function(food) {
+
+        foodTotal +=
+            parseFloat(food.dataset.price) || 0;
+
+    });
+
+
+    // Calculate final total
+    const total =
+        roomPrice + foodTotal;
+
+
+    // Display
+    document.getElementById('roomPriceDisplay').textContent =
+        '$' + roomPrice.toFixed(2);
+
+    document.getElementById('foodPriceDisplay').textContent =
+        '$' + foodTotal.toFixed(2);
+
+    document.getElementById('totalPriceDisplay').textContent =
+        '$' + total.toFixed(2);
+
+
+    // Save total to hidden input
+    document.getElementById('total_price').value =
+        total.toFixed(2);
+}
+
+
+// Calculate when page loads
+calculateTotal();
+
+</script>
 
 </body>
 </html>

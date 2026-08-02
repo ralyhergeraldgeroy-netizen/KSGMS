@@ -1,6 +1,4 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 /**
  * KSGM Resorts Management System
  * Main Entry Point
@@ -67,6 +65,12 @@ if ($isAdmin) {
 
 $suites = getSuites();
 $foods = getFoods();
+
+$showWrongPasswordPopup = false;
+
+if ($error_message === "Your password is incorrect.") {
+    $showWrongPasswordPopup = true;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +83,8 @@ $foods = getFoods();
     <script src="assets/js/app.js?v=<?= time(); ?>"></script>
 </head>
 <body class="<?= !$isAdmin ? 'text-white antialiased min-h-screen relative overflow-x-hidden' : 'text-slate-900 antialiased min-h-screen relative overflow-x-hidden' ?>">
+
+
 
 <!-- Galaxy Background -->
 <div class="fixed inset-0 -z-10">
@@ -97,7 +103,7 @@ $foods = getFoods();
         <div class="flex items-center gap-6">
             <?php if ($isAdmin): ?>
                 <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Mode: Administrator</span>
-                <a href="?action=logout" class="bg-slate-900 text-white font-semibold text-xs px-4 py-2.5 rounded-lg hover:bg-slate-800 transition-all">Leave Dashboard</a>
+                
             <?php elseif ($isGuestLoggedIn): ?>
                 <span class="text-xs font-bold text-yellow-400 tracking-wide uppercase border border-yellow-500/50 bg-yellow-500/10 px-3 py-1.5 rounded-lg">Guest: <?= htmlspecialchars($_SESSION['guest_user']) ?></span>
                 <a href="?action=logout" class="text-xs font-black text-black bg-yellow-400 hover:bg-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.4)] px-4 py-2.5 rounded-lg transition-all tracking-wide uppercase">Log Out</a>
@@ -117,19 +123,65 @@ $foods = getFoods();
 
 <main class="max-w-[1400px] mx-auto p-6 min-h-[calc(100vh-80px)] overflow-visible relative z-10">
 
-   <?php if (isset($_SESSION['error'])): ?>
-<div class="bg-red-600 text-white p-3 rounded mb-4">
-    <?= $_SESSION['error']; ?>
+   <?php if (!empty($error_message) && !$showWrongPasswordPopup): ?>
+
+<div id="errorMessagePopup"
+     class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-red-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(239,68,68,0.45)]">
+
+        <div class="text-red-500 text-5xl mb-4">
+            ❌
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Action Failed
+        </h2>
+
+        <p class="text-red-400 mt-3 font-semibold">
+            <?= htmlspecialchars($error_message) ?>
+        </p>
+
+        <button
+            onclick="document.getElementById('errorMessagePopup').remove()"
+            class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
+            OK
+        </button>
+
+    </div>
 </div>
-<?php unset($_SESSION['error']); 
-endif; ?>
+
+<?php endif; ?>
 
     <?php if (!empty($success_message)): ?>
-        <div class="p-4 bg-emerald-950 border-2 border-emerald-500 text-emerald-200 font-bold rounded-xl text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-            <?= htmlspecialchars($success_message) ?>
-        </div>
-    <?php endif; ?>
 
+<div id="successMessagePopup"
+     class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-emerald-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(16,185,129,0.4)]">
+
+        <div class="text-emerald-400 text-5xl mb-4">
+            ✓
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Success
+        </h2>
+
+        <p class="text-emerald-400 mt-3 font-semibold">
+            <?= htmlspecialchars($success_message) ?>
+        </p>
+
+        <button
+            onclick="document.getElementById('successMessagePopup').remove()"
+            class="mt-6 w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-lg transition">
+            OK
+        </button>
+
+    </div>
+</div>
+
+<?php endif; ?>
     <?php if (!$isAdmin): ?>
         <?php include __DIR__ . '/views/partials/guest_view.php'; ?>
     <?php else: ?>
@@ -142,6 +194,11 @@ endif; ?>
 
 <script>
     window.chartData = <?= json_encode($adminData['chart_data'] ?? []) ?>;
+
+    <?php if ($showWrongPasswordPopup): ?>
+        showWrongPasswordPopup();
+    <?php endif; ?>
 </script>
 </body>
 </html>
+

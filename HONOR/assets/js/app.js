@@ -194,10 +194,86 @@ function validateSignupPassword() {
     return true;
 }
 
-function closePasswordPopup() {
-    document.getElementById("passwordPopup").classList.add("hidden");
+function showWrongPasswordPopup() {
+    const customerModal = document.getElementById('customerLoginModal');
+    const wrongPopup = document.getElementById('wrongPasswordPopup');
+
+    if (customerModal) {
+        customerModal.classList.add('hidden');
+    }
+
+    if (wrongPopup) {
+        wrongPopup.classList.remove('hidden');
+    }
 }
 
-function closePasswordPopup() {
-    document.getElementById("passwordPopup").classList.add("hidden");
+function showWrongPasswordPopup() {
+    const customerModal = document.getElementById('customerLoginModal');
+    const wrongPopup = document.getElementById('wrongPasswordPopup');
+
+    if (customerModal) {
+        customerModal.classList.add('hidden');
+    }
+
+    if (wrongPopup) {
+        wrongPopup.classList.remove('hidden');
+    }
 }
+
+function closeWrongPasswordPopup() {
+    const wrongPopup = document.getElementById('wrongPasswordPopup');
+    const customerModal = document.getElementById('customerLoginModal');
+
+    if (wrongPopup) {
+        wrongPopup.classList.add('hidden');
+    }
+
+    if (customerModal) {
+        customerModal.classList.remove('hidden');
+    }
+
+    // Clear password after wrong login
+    const passwordInput = document.querySelector(
+        '#customerLoginModal input[name="password"]'
+    );
+
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
+}
+
+
+function searchBookings() {
+    const searchInput = document.getElementById("bookingSearch");
+    const table = document.getElementById("bookingsTable");
+
+    if (!searchInput || !table) return;
+
+    const searchValue = searchInput.value.toLowerCase().trim();
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+
+        if (text.includes(searchValue)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+
+// Search while typing
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("bookingSearch");
+
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            searchBookings();
+        });
+    }
+
+});
