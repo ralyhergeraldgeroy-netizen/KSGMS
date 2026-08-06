@@ -17,6 +17,10 @@ require_once __DIR__ . '/includes/functions.php';
 
 $error_message = null;
 $success_message = null;
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
 
 // Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Handle logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+
+    $_SESSION['success_message'] = "Successfully logged out.";
+
     handleLogout();
 }
 
@@ -201,4 +208,3 @@ if ($error_message === "Your password is incorrect.") {
 </script>
 </body>
 </html>
-
