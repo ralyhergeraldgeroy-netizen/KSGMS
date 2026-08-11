@@ -24,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $resort = $_POST['resort_name'] ?? '';
     $room = $_POST['room_number'] ?? '';
     $selectedFoods = $_POST['food_items'] ?? [];
+    $checkin = $_POST['check_in'] ?? $booking['check_in'];
+    $remarks = trim($_POST['remarks'] ?? '');
+
+    if (strlen($remarks) > 500) {
+        $remarks = substr($remarks, 0, 500);
+    }
 
     // Calculate room price
     $roomPrice = $ROOM_PRICES[$resort] ?? 0;
@@ -48,7 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             resort_name = ?,
             room_number = ?,
             food_items = ?,
-            total_price = ?
+            total_price = ?,
+            check_in = ?,
+            remarks = ?
         WHERE id = ?
     ");
 
@@ -57,6 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $room,
         $food,
         $totalPrice,
+        $checkin,
+        $remarks,
         $id
     ]);
 
@@ -82,15 +92,20 @@ $currentFoods = !empty($booking['food_items'])
 
 </head>
 
-<body class="bg-gray-900 flex justify-center items-center min-h-screen overflow-hidden">
+<body class="bg-gray-900 flex justify-center items-start min-h-screen py-10 px-4 overflow-y-auto">
 
-<div class="bg-white p-6 rounded-xl w-full max-w-[500px]">
+<div class="bg-white p-6 md:p-8 rounded-xl w-full max-w-7xl">
 
 <h2 class="text-2xl font-bold mb-6 text-gray-900">
     Edit Booking
 </h2>
 
 <form method="POST">
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+<!-- COLUMN 1: BOOKING DETAILS -->
+<div>
 
 <!-- RESORT -->
 
@@ -134,13 +149,45 @@ $currentFoods = !empty($booking['food_items'])
 >
 
 
-<!-- FOOD -->
+<!-- CHECK-IN DATE -->
+
+<label class="font-bold text-gray-800">
+    Check-in Date
+</label>
+
+<input
+    type="date"
+    name="check_in"
+    value="<?= htmlspecialchars($booking['check_in'] ? date('Y-m-d', strtotime($booking['check_in'])) : '') ?>"
+    class="w-full border p-2 rounded mb-4"
+>
+
+
+<!-- REMARKS -->
+
+<label class="font-bold text-gray-800">
+    Special Request / Remarks
+</label>
+
+<textarea
+    name="remarks"
+    rows="4"
+    maxlength="500"
+    placeholder="Any special request..."
+    class="w-full border p-2 rounded mb-4"
+><?= htmlspecialchars($booking['remarks'] ?? '') ?></textarea>
+
+</div>
+
+
+<!-- COLUMN 2: FOOD -->
+<div>
 
 <label class="font-bold text-gray-800">
     Food
 </label>
 
-<div class="space-y-3 mb-5">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3 mb-5 mt-2">
 
 <?php foreach ($FOOD_PRICES as $foodName => $foodPrice): ?>
 
@@ -174,6 +221,11 @@ $currentFoods = !empty($booking['food_items'])
 
 </div>
 
+</div>
+
+
+<!-- COLUMN 3: PRICE + ACTIONS -->
+<div>
 
 <!-- PRICE BREAKDOWN -->
 
@@ -249,6 +301,10 @@ $currentFoods = !empty($booking['food_items'])
 >
     Cancel
 </a>
+
+</div>
+
+</div>
 
 </div>
 
