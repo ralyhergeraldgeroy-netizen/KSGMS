@@ -149,46 +149,62 @@ if ($error_message === "Your password is incorrect.") {
             <?= htmlspecialchars($error_message) ?>
         </p>
 
-        <button
-            onclick="document.getElementById('errorMessagePopup').remove()"
-            class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
-            OK
-        </button>
-
+      <button
+    type="button"
+    onclick="document.getElementById('errorMessagePopup').remove();"
+    class="relative z-[10000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg transition cursor-pointer">
+    OK
+</button>
+    
     </div>
 </div>
 
 <?php endif; ?>
 
-    <?php if (!empty($success_message)): ?>
+    <?php if (!empty($error_message)): ?>
 
-<div id="successMessagePopup"
-     class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+<div id="errorMessagePopup"
+     class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 pointer-events-auto">
 
-    <div class="bg-black border-2 border-emerald-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(16,185,129,0.4)]">
+    <div class="bg-black border-2 border-yellow-400 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(234,179,8,0.45)] pointer-events-auto">
 
-        <div class="text-emerald-400 text-5xl mb-4">
-            ✓
-        </div>
-
-        <h2 class="text-white text-2xl font-bold">
-            Success
+        <h2 class="text-yellow-400 text-2xl font-bold">
+            Invalid Password
         </h2>
 
-        <p class="text-emerald-400 mt-3 font-semibold">
-            <?= htmlspecialchars($success_message) ?>
+        <p class="text-white mt-4 text-left">
+            Your password must:
         </p>
 
+        <ul class="text-white mt-3 text-left list-disc pl-5 space-y-2">
+            <li>Contain at least <b>1 uppercase letter</b></li>
+            <li>Contain at least <b>1 number</b></li>
+            <li>Maximum of <b>16 characters</b></li>
+            <li>Use only letters, numbers, and underscore (_)</li>
+        </ul>
+
         <button
-            onclick="document.getElementById('successMessagePopup').remove()"
-            class="mt-6 w-full bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-3 rounded-lg transition">
+            type="button"
+            onclick="closeErrorPopup()"
+            class="relative z-[100000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg cursor-pointer pointer-events-auto">
             OK
         </button>
 
     </div>
 </div>
 
+<script>
+function closeErrorPopup() {
+    const popup = document.getElementById('errorMessagePopup');
+
+    if (popup) {
+        popup.remove();
+    }
+}
+</script>
+
 <?php endif; ?>
+
     <?php if (!$isAdmin): ?>
         <?php include __DIR__ . '/views/partials/guest_view.php'; ?>
     <?php else: ?>
