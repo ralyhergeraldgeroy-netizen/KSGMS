@@ -51,7 +51,13 @@
                                 <span class="text-yellow-500/70 font-semibold uppercase tracking-wider text-[10px] block sm:inline">Gastronomy additions:</span>
                                 <?= !empty($order['food_items']) ? htmlspecialchars($order['food_items']) : '<span class="italic text-neutral-600">None</span>' ?>
                             </p>
-                            <span class="block text-[10px] font-mono text-neutral-600">Issued timestamp: <?= htmlspecialchars($order['check_in']) ?></span>
+                            <?php if (!empty($order['remarks'])): ?>
+                            <p class="text-xs text-neutral-400 font-medium">
+                                <span class="text-yellow-500/70 font-semibold uppercase tracking-wider text-[10px] block sm:inline">Special request:</span>
+                                <?= htmlspecialchars($order['remarks']) ?>
+                            </p>
+                            <?php endif; ?>
+                            <span class="block text-[10px] font-mono text-neutral-600">Check-in date: <?= !empty($order['check_in']) ? htmlspecialchars(date('M d, Y', strtotime($order['check_in']))) : 'N/A' ?></span>
                         </div>
                         <div class="text-left sm:text-right border-t border-neutral-900 sm:border-0 pt-2 sm:pt-0">
                             <span class="text-[10px] block font-black tracking-widest uppercase text-neutral-500">Gross Total Cost</span>
@@ -138,6 +144,36 @@ $images = [
                     <span class="font-mono text-xs font-black text-yellow-400 bg-yellow-500/10 px-3 py-1 rounded border border-yellow-500/20 shadow-[0_0_5px_rgba(234,179,8,0.1)]">$<?= $food[2] ?></span>
                 </label>
             <?php endforeach; ?>
+        </div>
+
+        <!-- Preferred Date & Special Request -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-neutral-950 border-2 border-neutral-800 rounded-xl p-5">
+                <label for="checkinDate" class="block text-xs font-black uppercase tracking-widest text-yellow-400 mb-3">
+                    Preferred Check-in Date
+                </label>
+                <input
+                    type="date"
+                    id="checkinDate"
+                    name="checkin_date"
+                    min="<?= date('Y-m-d') ?>"
+                    required
+                    class="w-full px-4 py-3 bg-black border border-neutral-700 rounded-lg text-white text-sm focus:border-yellow-400 focus:outline-none"
+                >
+            </div>
+            <div class="bg-neutral-950 border-2 border-neutral-800 rounded-xl p-5">
+                <label for="specialRequestRemarks" class="block text-xs font-black uppercase tracking-widest text-yellow-400 mb-3">
+                    Special Request <span class="text-neutral-500 normal-case tracking-normal font-medium">(optional)</span>
+                </label>
+                <textarea
+                    id="specialRequestRemarks"
+                    name="remarks"
+                    maxlength="500"
+                    rows="2"
+                    placeholder="e.g. late check-in, high floor, allergy notes..."
+                    class="w-full px-4 py-3 bg-black border border-neutral-700 rounded-lg text-white text-sm focus:border-yellow-400 focus:outline-none resize-none"
+                ></textarea>
+            </div>
         </div>
 
         <div class="p-6 bg-gradient-to-r from-neutral-950 to-neutral-900 border-2 border-yellow-500 rounded-xl flex items-center justify-between shadow-[0_0_20px_rgba(234,179,8,0.2)]">
