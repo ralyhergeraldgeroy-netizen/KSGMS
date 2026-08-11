@@ -5,7 +5,7 @@
 
 function getGuestBookings($pdo, $username) {
     try {
-        $stmt = $pdo->prepare("SELECT id, resort_name, room_number, total_price, food_items, check_in FROM bookings WHERE customer_name = ? ORDER BY id DESC");
+        $stmt = $pdo->prepare("SELECT id, resort_name, room_number, total_price, food_items, check_in, remarks FROM bookings WHERE customer_name = ? ORDER BY id DESC");
         $stmt->execute([$username]);
         return $stmt->fetchAll();
     } catch (\PDOException $e) {
@@ -25,7 +25,7 @@ function getAdminData($pdo) {
         $sales_query = $pdo->query("SELECT SUM(total_price) AS grand_total FROM bookings");
         $data['total_sales'] = $sales_query->fetch()['grand_total'] ?? 0;
 
-        $bookings_query = $pdo->query("SELECT id, customer_name, resort_name, room_number, total_price, food_items, check_in FROM bookings ORDER BY id DESC");
+        $bookings_query = $pdo->query("SELECT id, customer_name, resort_name, room_number, total_price, food_items, check_in, remarks FROM bookings ORDER BY id DESC");
         $data['bookings'] = $bookings_query->fetchAll();
 
         $chart_query = $pdo->query("SELECT resort_name, COUNT(*) as count FROM bookings GROUP BY resort_name");
