@@ -137,26 +137,18 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
     </div>
 </div>
 
-<!-- Wrong Password Popup -->
-<div id="wrongPasswordPopup"
+<!-- Admin Wrong Password Popup -->
+<div id="adminWrongPasswordPopup"
      class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
 
     <div class="bg-black border-2 border-red-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_30px_rgba(239,68,68,0.4)]">
 
-        <div class="text-red-500 text-5xl mb-4">
-            ❌
-        </div>
-
-        <h2 class="text-white text-2xl font-bold">
-            Login Failed
-        </h2>
-
-        <p class="text-red-400 mt-3 font-semibold">
-            Your password is incorrect.
+        <p class="text-red-400 text-xl font-bold">
+            Incorrect password.
         </p>
 
         <button
-            onclick="if (typeof closeWrongPasswordPopup === 'function') { closeWrongPasswordPopup(); } else { document.getElementById('wrongPasswordPopup').classList.add('hidden'); }"
+            onclick="if (typeof closeAdminWrongPasswordPopup === 'function') { closeAdminWrongPasswordPopup(); } else { document.getElementById('adminWrongPasswordPopup').classList.add('hidden'); }"
             class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
             OK
         </button>
