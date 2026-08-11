@@ -73,10 +73,16 @@ if ($isAdmin) {
 $suites = getSuites();
 $foods = getFoods();
 
-$showWrongPasswordPopup = false;
+$showAdminWrongPasswordPopup = false;
 
 if ($error_message === "Your password is incorrect.") {
-    $showWrongPasswordPopup = true;
+    $showAdminWrongPasswordPopup = true;
+}
+
+$showPasswordFormatPopup = false;
+
+if ($error_message === "Invalid password. Use only letters, numbers, and underscore (_), include at least one uppercase letter, and do not exceed 16 characters.") {
+    $showPasswordFormatPopup = true;
 }
 ?>
 <!DOCTYPE html>
@@ -130,7 +136,7 @@ if ($error_message === "Your password is incorrect.") {
 
 <main class="max-w-[1400px] mx-auto p-6 min-h-[calc(100vh-80px)] overflow-visible relative z-10">
 
-   <?php if (!empty($error_message) && !$showWrongPasswordPopup): ?>
+   <?php if (!empty($error_message) && !$showAdminWrongPasswordPopup && !$showPasswordFormatPopup): ?>
 
 <div id="errorMessagePopup"
      class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
@@ -161,7 +167,7 @@ if ($error_message === "Your password is incorrect.") {
 
 <?php endif; ?>
 
-    <?php if (!empty($error_message)): ?>
+    <?php if ($showPasswordFormatPopup): ?>
 
 <div id="errorMessagePopup"
      class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 pointer-events-auto">
@@ -205,6 +211,37 @@ function closeErrorPopup() {
 
 <?php endif; ?>
 
+    <?php if (!empty($success_message)): ?>
+
+<div id="successMessagePopup"
+     class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-emerald-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(16,185,129,0.45)]">
+
+        <div class="text-emerald-500 text-5xl mb-4">
+            ✅
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Success
+        </h2>
+
+        <p class="text-emerald-400 mt-3 font-semibold">
+            <?= htmlspecialchars($success_message) ?>
+        </p>
+
+      <button
+    type="button"
+    onclick="document.getElementById('successMessagePopup').remove();"
+    class="relative z-[10000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg transition cursor-pointer">
+    OK
+</button>
+
+    </div>
+</div>
+
+<?php endif; ?>
+
     <?php if (!$isAdmin): ?>
         <?php include __DIR__ . '/views/partials/guest_view.php'; ?>
     <?php else: ?>
@@ -218,8 +255,8 @@ function closeErrorPopup() {
 <script>
     window.chartData = <?= json_encode($adminData['chart_data'] ?? []) ?>;
 
-    <?php if ($showWrongPasswordPopup): ?>
-        showWrongPasswordPopup();
+    <?php if ($showAdminWrongPasswordPopup): ?>
+        showAdminWrongPasswordPopup();
     <?php endif; ?>
 </script>
 </body>
