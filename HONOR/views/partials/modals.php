@@ -105,13 +105,15 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
     <div class="bg-black border-2 border-yellow-400 rounded-xl p-8 text-center w-96">
         <h2 class="text-yellow-400 text-2xl font-bold">Success!</h2>
         <p class="text-white mt-3">Reservation processed successfully.</p>
-        <button onclick="closePopup()" class="mt-5 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold">OK</button>
+        <button
+            onclick="if (typeof closePopup === 'function') { closePopup(); } else { document.getElementById('successPopup').classList.add('hidden'); }"
+            class="mt-5 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold">
+            OK
+        </button>
     </div>
-    </div>
+</div>
 
-    
-
-<!-- Password Requirement Popup -->
+<!-- Password Requirement Popup (client-side signup validation) -->
 <div id="passwordPopup" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
     <div class="bg-black border-2 border-yellow-400 rounded-2xl p-6 w-96">
         <h2 class="text-yellow-400 text-2xl font-bold text-center">
@@ -127,8 +129,9 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
             <li>Use only letters, numbers, and underscore (_)</li>
         </ul>
 
-        <button onclick="closePasswordPopup()"
-                class="mt-6 w-full bg-yellow-400 text-black font-bold py-3 rounded-lg">
+        <button
+            onclick="if (typeof closePasswordPopup === 'function') { closePasswordPopup(); } else { document.getElementById('passwordPopup').classList.add('hidden'); }"
+            class="mt-6 w-full bg-yellow-400 text-black font-bold py-3 rounded-lg">
             OK
         </button>
     </div>
@@ -152,17 +155,11 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
             Your password is incorrect.
         </p>
 
-        <button onclick="closeWrongPasswordPopup()"
-                class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
+        <button
+            onclick="if (typeof closeWrongPasswordPopup === 'function') { closeWrongPasswordPopup(); } else { document.getElementById('wrongPasswordPopup').classList.add('hidden'); }"
+            class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
             OK
         </button>
 
     </div>
 </div>
-
-
-
-    </div>
-</div>
-    
-  
