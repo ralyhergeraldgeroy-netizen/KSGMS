@@ -12,13 +12,14 @@
         <h2 class="text-white text-center text-2xl font-bold mb-6">Customer Login</h2>
 
         <form method="POST">
-            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">  
 
             <input type="text"
-                   name="username"
-                   placeholder="Username"
-                   required
-                   class="w-full mb-4 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white">
+       name="username"
+       placeholder="Username"
+       value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
+       required
+       class="w-full mb-4 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white">
 
      <input
     type="password"
@@ -104,13 +105,15 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
     <div class="bg-black border-2 border-yellow-400 rounded-xl p-8 text-center w-96">
         <h2 class="text-yellow-400 text-2xl font-bold">Success!</h2>
         <p class="text-white mt-3">Reservation processed successfully.</p>
-        <button onclick="closePopup()" class="mt-5 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold">OK</button>
+        <button
+            onclick="if (typeof closePopup === 'function') { closePopup(); } else { document.getElementById('successPopup').classList.add('hidden'); }"
+            class="mt-5 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold">
+            OK
+        </button>
     </div>
-    </div>
+</div>
 
-    
-
-<!-- Password Requirement Popup -->
+<!-- Password Requirement Popup (client-side signup validation) -->
 <div id="passwordPopup" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[9999]">
     <div class="bg-black border-2 border-yellow-400 rounded-2xl p-6 w-96">
         <h2 class="text-yellow-400 text-2xl font-bold text-center">
@@ -126,14 +129,29 @@ class="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text
             <li>Use only letters, numbers, and underscore (_)</li>
         </ul>
 
-        <button onclick="closePasswordPopup()"
-                class="mt-6 w-full bg-yellow-400 text-black font-bold py-3 rounded-lg">
+        <button
+            onclick="if (typeof closePasswordPopup === 'function') { closePasswordPopup(); } else { document.getElementById('passwordPopup').classList.add('hidden'); }"
+            class="mt-6 w-full bg-yellow-400 text-black font-bold py-3 rounded-lg">
             OK
         </button>
     </div>
 </div>
 
+<!-- Admin Wrong Password Popup -->
+<div id="adminWrongPasswordPopup"
+     class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-red-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+
+        <p class="text-red-400 text-xl font-bold">
+            Incorrect password.
+        </p>
+
+        <button
+            onclick="if (typeof closeAdminWrongPasswordPopup === 'function') { closeAdminWrongPasswordPopup(); } else { document.getElementById('adminWrongPasswordPopup').classList.add('hidden'); }"
+            class="mt-6 w-full bg-red-500 hover:bg-red-400 text-white font-bold py-3 rounded-lg transition">
+            OK
+        </button>
+
     </div>
 </div>
-    
-  

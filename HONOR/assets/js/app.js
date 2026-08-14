@@ -58,6 +58,25 @@ function calculateLiveTotal() {
 }
 
 function submitFinalReservation() {
+    const checkinDateInput = document.getElementById('checkinDate');
+    const checkinDate = checkinDateInput ? checkinDateInput.value : '';
+
+    if (!checkinDate) {
+        alert('Please select your preferred check-in date.');
+        if (checkinDateInput) checkinDateInput.focus();
+        return;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (checkinDate < todayStr) {
+        alert('Check-in date cannot be in the past.');
+        if (checkinDateInput) checkinDateInput.focus();
+        return;
+    }
+
+    const remarksInput = document.getElementById('specialRequestRemarks');
+    const remarks = remarksInput ? remarksInput.value.trim() : '';
+
     const selectedFoods = [];
     document.querySelectorAll('input[name="food_selection[]"]:checked').forEach(box => {
         selectedFoods.push(box.value);
@@ -67,6 +86,8 @@ function submitFinalReservation() {
     formData.append('process_wizard_reservation', '1');
     formData.append('room', currentSelectedRoom);
     formData.append('foods', JSON.stringify(selectedFoods));
+    formData.append('checkin_date', checkinDate);
+    formData.append('remarks', remarks);
 
     fetch('index.php', {
         method: 'POST',
@@ -120,11 +141,6 @@ function checkPasswordRules() {
         (noSpecial ? "✅" : "❌") + " No special characters (only letters, numbers, and underscore \"_\")";
 }
 
-
-
-
-
-
 function closePopup() {
     window.location.reload();
 }
@@ -165,8 +181,26 @@ function showPasswordPopup() {
     document.getElementById("passwordPopup").classList.remove("hidden");
 }
 
+function closePasswordPopup() {
+    const passwordPopup = document.getElementById("passwordPopup");
+    const signupModal = document.getElementById("signupModal");
 
+    if (passwordPopup) {
+        passwordPopup.classList.add("hidden");
+    }
 
+    // Bring the signup form back so the user can fix their password
+    if (signupModal) {
+        signupModal.classList.remove("hidden");
+    }
+
+    // Refocus the password field and clear it for a fresh attempt
+    const passwordInput = document.getElementById("signupPassword");
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof window.chartData !== 'undefined') {
@@ -194,10 +228,71 @@ function validateSignupPassword() {
     return true;
 }
 
-function closePasswordPopup() {
-    document.getElementById("passwordPopup").classList.add("hidden");
+function showAdminWrongPasswordPopup() {
+    const adminModal = document.getElementById('loginModal');
+    const wrongPopup = document.getElementById('adminWrongPasswordPopup');
+
+    if (adminModal) {
+        adminModal.classList.add('hidden');
+    }
+
+    if (wrongPopup) {
+        wrongPopup.classList.remove('hidden');
+    }
 }
 
-function closePasswordPopup() {
-    document.getElementById("passwordPopup").classList.add("hidden");
+function closeAdminWrongPasswordPopup() {
+    const wrongPopup = document.getElementById('adminWrongPasswordPopup');
+    const adminModal = document.getElementById('loginModal');
+
+    if (wrongPopup) {
+        wrongPopup.classList.add('hidden');
+    }
+
+    if (adminModal) {
+        adminModal.classList.remove('hidden');
+    }
+
+    // Clear password after wrong login
+    const passwordInput = document.querySelector(
+        '#loginModal input[name="admin_password"]'
+    );
+
+    if (passwordInput) {
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
 }
+
+function searchBookings() {
+    const searchInput = document.getElementById("bookingSearch");
+    const table = document.getElementById("bookingsTable");
+
+    if (!searchInput || !table) return;
+
+    const searchValue = searchInput.value.toLowerCase().trim();
+    const rows = table.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+
+        if (text.includes(searchValue)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+
+// Search while typing
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("bookingSearch");
+
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            searchBookings();
+        });
+    }
+
+});
