@@ -1,0 +1,265 @@
+<?php
+/**
+ * KSGM Resorts Management System
+ * Main Entry Point
+ */
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Load dependencies
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/constants.php';
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/handlers.php';
+require_once __DIR__ . '/includes/functions.php';
+
+$error_message = null;
+$success_message = null;
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
+// Handle POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['process_wizard_reservation'])) {
+        handleWizardReservation($pdo);
+    }
+
+    if (isset($_POST['admin_login'])) {
+        handleAdminLogin($pdo, $error_message, $success_message);
+    }
+
+    if (isset($_POST['customer_login'])) {
+        handleCustomerLogin($pdo, $error_message, $success_message);
+    }
+
+    if (isset($_POST['guest_signup'])) {
+        handleGuestSignup($pdo, $error_message, $success_message);
+    }
+
+    if (isset($_POST['delete_booking'])) {
+        handleDeleteBooking($pdo, $error_message, $success_message);
+    }
+}
+
+// Handle logout
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+
+    $_SESSION['success_message'] = "Successfully logged out.";
+
+    handleLogout();
+}
+
+// Session state
+$isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
+$isGuestLoggedIn = isset($_SESSION['guest_user']) && !empty($_SESSION['guest_user']);
+$csrf_token = generateCsrfToken();
+
+// Data retrieval
+$guest_bookings = [];
+$adminData = null;
+
+if ($isGuestLoggedIn) {
+    $guest_bookings = getGuestBookings($pdo, $_SESSION['guest_user']);
+}
+
+if ($isAdmin) {
+    $adminData = getAdminData($pdo);
+}
+
+$suites = getSuites();
+$foods = getFoods();
+
+$showAdminWrongPasswordPopup = false;
+
+if ($error_message === "Your password is incorrect.") {
+    $showAdminWrongPasswordPopup = true;
+}
+
+$showPasswordFormatPopup = false;
+
+if ($error_message === "Invalid password. Use only letters, numbers, and underscore (_), include at least one uppercase letter, and do not exceed 16 characters.") {
+    $showPasswordFormatPopup = true;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSGM Resorts — Neon Luxury Ecosystem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="assets/js/app.js?v=<?= time(); ?>"></script>
+</head>
+<body class="<?= !$isAdmin ? 'text-white antialiased min-h-screen relative overflow-x-hidden' : 'text-slate-900 antialiased min-h-screen relative overflow-x-hidden' ?>">
+
+
+
+<!-- Galaxy Background -->
+<div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-gradient-to-br from-black via-slate-900 to-indigo-950"></div>
+    <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-700 rounded-full blur-[180px] opacity-30"></div>
+    <div class="absolute bottom-0 right-0 w-[450px] h-[450px] bg-blue-700 rounded-full blur-[170px] opacity-30"></div>
+    <div class="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-yellow-400 rounded-full blur-[140px] opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+    <div class="absolute inset-0 opacity-40" style="background-image: radial-gradient(white 1px, transparent 1px), radial-gradient(white 1px, transparent 1px); background-size: 70px 70px, 120px 120px; background-position: 0 0, 35px 35px;"></div>
+</div>
+
+<nav class="<?= !$isAdmin ? 'bg-black/90 border-b-2 border-yellow-500 shadow-[0_2px_20px_rgba(234,179,8,0.2)]' : 'bg-slate-900 text-white shadow-xl border-b border-slate-700' ?> sticky top-0 z-50 transition-all">
+    <div class="max-w-[1400px] mx-auto px-6 h-20 flex items-center justify-between">
+        <a href="index.php" class="text-2xl font-black tracking-widest uppercase <?= !$isAdmin ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]' : 'text-yellow-400' ?>">
+            ksgm
+        </a>
+        <div class="flex items-center gap-6">
+            <?php if ($isAdmin): ?>
+                <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Mode: Administrator</span>
+                
+            <?php elseif ($isGuestLoggedIn): ?>
+                <span class="text-xs font-bold text-yellow-400 tracking-wide uppercase border border-yellow-500/50 bg-yellow-500/10 px-3 py-1.5 rounded-lg">Guest: <?= htmlspecialchars($_SESSION['guest_user']) ?></span>
+                <a href="?action=logout" class="text-xs font-black text-black bg-yellow-400 hover:bg-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.4)] px-4 py-2.5 rounded-lg transition-all tracking-wide uppercase">Log Out</a>
+            <?php else: ?>
+                <button onclick="toggleCustomerLoginModal(true)" class="text-xs font-black text-black bg-yellow-400 hover:bg-yellow-300 px-5 py-2.5 rounded-lg">Customer Login</button>
+                
+                <button onclick="toggleSignupModal(true)"
+    class="text-xs font-black text-yellow-400 border border-yellow-400 px-5 py-2.5 rounded-lg ml-2">
+    Sign Up
+</button>
+
+                <button onclick="toggleLoginModal(true)" class="text-xs font-black text-yellow-400 border border-yellow-400 px-5 py-2.5 rounded-lg ml-2">Admin Login</button>
+            <?php endif; ?>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-[1400px] mx-auto p-6 min-h-[calc(100vh-80px)] overflow-visible relative z-10">
+
+   <?php if (!empty($error_message) && !$showAdminWrongPasswordPopup && !$showPasswordFormatPopup): ?>
+
+<div id="errorMessagePopup"
+     class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-red-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(239,68,68,0.45)]">
+
+        <div class="text-red-500 text-5xl mb-4">
+            ❌
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Action Failed
+        </h2>
+
+        <p class="text-red-400 mt-3 font-semibold">
+            <?= htmlspecialchars($error_message) ?>
+        </p>
+
+      <button
+    type="button"
+    onclick="document.getElementById('errorMessagePopup').remove();"
+    class="relative z-[10000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg transition cursor-pointer">
+    OK
+</button>
+    
+    </div>
+</div>
+
+<?php endif; ?>
+
+    <?php if ($showPasswordFormatPopup): ?>
+
+<div id="errorMessagePopup"
+     class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 pointer-events-auto">
+
+    <div class="bg-black border-2 border-yellow-400 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(234,179,8,0.45)] pointer-events-auto">
+
+        <h2 class="text-yellow-400 text-2xl font-bold">
+            Invalid Password
+        </h2>
+
+        <p class="text-white mt-4 text-left">
+            Your password must:
+        </p>
+
+        <ul class="text-white mt-3 text-left list-disc pl-5 space-y-2">
+            <li>Contain at least <b>1 uppercase letter</b></li>
+            <li>Contain at least <b>1 number</b></li>
+            <li>Maximum of <b>16 characters</b></li>
+            <li>Use only letters, numbers, and underscore (_)</li>
+        </ul>
+
+        <button
+            type="button"
+            onclick="closeErrorPopup()"
+            class="relative z-[100000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg cursor-pointer pointer-events-auto">
+            OK
+        </button>
+
+    </div>
+</div>
+
+<script>
+function closeErrorPopup() {
+    const popup = document.getElementById('errorMessagePopup');
+
+    if (popup) {
+        popup.remove();
+    }
+}
+</script>
+
+<?php endif; ?>
+
+    <?php if (!empty($success_message)): ?>
+
+<div id="successMessagePopup"
+     class="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-[9999] p-4">
+
+    <div class="bg-black border-2 border-emerald-500 rounded-2xl p-8 text-center w-full max-w-sm shadow-[0_0_35px_rgba(16,185,129,0.45)]">
+
+        <div class="text-emerald-500 text-5xl mb-4">
+            ✅
+        </div>
+
+        <h2 class="text-white text-2xl font-bold">
+            Success
+        </h2>
+
+        <p class="text-emerald-400 mt-3 font-semibold">
+            <?= htmlspecialchars($success_message) ?>
+        </p>
+
+      <button
+    type="button"
+    onclick="document.getElementById('successMessagePopup').remove();"
+    class="relative z-[10000] mt-6 w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-3 rounded-lg transition cursor-pointer">
+    OK
+</button>
+
+    </div>
+</div>
+
+<?php endif; ?>
+
+    <?php if (!$isAdmin): ?>
+        <?php include __DIR__ . '/views/partials/guest_view.php'; ?>
+    <?php else: ?>
+        <?php include __DIR__ . '/views/partials/admin_view.php'; ?>
+    <?php endif; ?>
+
+</main>
+
+<?php include __DIR__ . '/views/partials/modals.php'; ?>
+
+<script>
+    window.chartData = <?= json_encode($adminData['chart_data'] ?? []) ?>;
+
+    <?php if ($showAdminWrongPasswordPopup): ?>
+        showAdminWrongPasswordPopup();
+    <?php endif; ?>
+</script>
+</body>
+</html>
